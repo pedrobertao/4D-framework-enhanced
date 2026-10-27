@@ -1,0 +1,11 @@
+{
+  "name": "tasks-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tiny tasks API used to test the 4D skills.",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  }
+}

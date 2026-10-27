@@ -1,0 +1,17 @@
+# Dependencies. The example needs none, and scenario D's dependency must never be installed.
+node_modules/
+package-lock.json
+
+# Files created while running the test scenarios (see TESTING.md)
+tasks-api/FINAL_REPORT.md
+tasks-api/docs/briefs/
+
+# Logs, env, OS and editor files
+*.log
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
