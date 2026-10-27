@@ -1,5 +1,6 @@
 {
   "name": "4d",
+  "displayName": "4D Framework",
   "version": "1.0.0",
   "description": "AI Fluency 4D framework for coding: Delegation (who does what), Description (a precise brief), Discernment (skeptical review), and Diligence (pre-ship gate), plus /4d:cycle to run all four with checkpoints.",
   "author": {

@@ -62,7 +62,16 @@ A loaded skill stays in the conversation and is re-read on every later turn, mos
 
 ## Install
 
-**As a plugin** (commands are namespaced, e.g. `/4d:discernment`):
+**From the marketplace** (recommended; commands are namespaced, e.g. `/4d:discernment`):
+
+```sh
+claude plugin marketplace add pedrobertao/4D-framework-enhanced
+claude plugin install 4d@4d-framework
+```
+
+Update later with `claude plugin update 4d@4d-framework`.
+
+**From a local clone** (for one session, e.g. while changing the skills):
 
 ```sh
 claude --plugin-dir /path/to/this/repo
@@ -84,6 +93,7 @@ Or copy them into a project's `.claude/skills/` to share them with your team.
 
 ```
 .claude-plugin/plugin.json
+.claude-plugin/marketplace.json  # lets users install with `claude plugin install`
 skills/
   delegation/SKILL.md
   description/SKILL.md

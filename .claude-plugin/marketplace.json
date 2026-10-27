@@ -1,0 +1,14 @@
+{
+  "name": "4d-framework",
+  "owner": {
+    "name": "Pedro Bertão",
+    "email": "pedrobertao123@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "4d",
+      "source": "./",
+      "description": "AI Fluency 4D framework for coding: Delegation, Description, Discernment, and Diligence, plus /4d:cycle to run all four with checkpoints."
+    }
+  ]
+}
