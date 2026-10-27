@@ -94,6 +94,16 @@ skills/
   cycle/SKILL.md  # orchestrator, user-invoked only
 ```
 
+## Feedback
+
+Feedback is welcome, especially from real use on your own code. [Open an issue](https://github.com/pedrobertao/4D-framework-enhanced/issues/new/choose) and pick a template:
+
+- **A skill that got it wrong:** it missed a problem, raised a false alarm, skipped a checkpoint, or picked the wrong mode
+- **Too much process or too many tokens** for the size of the task
+- **Ideas:** new scenarios, board integrations, or anything from [TODO.md](TODO.md) you'd like prioritized
+
+It helps to include the command you ran (e.g. `/4d:discernment`), what you expected, and what Claude actually did. A pasted excerpt of the output is enough. Remove any secrets or private code first.
+
 ## License
 
 [MIT](LICENSE)
