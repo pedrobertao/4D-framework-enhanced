@@ -1,5 +1,5 @@
 ---
-name: 4-diligence
+name: diligence
 description: Pre-ship responsibility check for AI-assisted code — appropriate AI use, transparency about AI involvement, and the developer's ownership of what gets deployed. Use before committing, opening a PR, merging, or deploying AI-assisted work, or when the user asks "is this ready to ship?".
 argument-hint: "[what is about to ship — defaults to current changes]"
 ---
@@ -37,7 +37,7 @@ Then give the status. If anything looks off, switch to the full check.
 - **Secrets in the change:** scan the diff, test fixtures, and logs for tokens, keys, passwords, `.env` values, and personal data.
 - **Supply chain (last line of defense):** if the change touches a manifest, lockfile, GitHub Actions, Dockerfile, CDN script, or install script:
   - Confirm the supply chain check from the brief was done and reported.
-  - If it wasn't, run the key checks now: the name is the real package (not typosquatted or invented), release age, install scripts, pinned versions or SHAs/digests, and audit tool results (`npm audit`, `pip-audit`, `cargo audit`, `osv-scanner`).
+  - If it wasn't, read `../description/supply-chain.md` and run the key checks now: the name is the real package (not typosquatted or invented), release age, install scripts, pinned versions or SHAs/digests, and audit tool results (`npm audit`, `pip-audit`, `cargo audit`, `osv-scanner`).
   - Any unresolved problem here means **Not ready**.
 - **Licensing and provenance:** does any substantial block look copied from a known source with an incompatible license? Are new dependencies' licenses compatible?
 - **Policy:** does the project or employer have AI-usage rules (CONTRIBUTING, CLAUDE.md, PR templates)? Are they followed?
@@ -51,7 +51,7 @@ Then give the status. If anything looks off, switch to the full check.
   - what was **not** verified;
   - known limitations and follow-ups.
 - **No overstatement:** only claim what was actually checked. "Tests pass" must mean they ran on the final version.
-- **Follow-ups become tracked work:** suggest turning each follow-up into a ticket or issue so it isn't lost in a chat log.
+- **Follow-ups become tracked work:** collect them from every Final report, every discernment review, and the brief's Deferred list, then suggest turning each into a ticket or issue so it isn't lost in a chat log.
 - **Agency mode:** the agent's actions must be identifiable (a bot account, a label, or a marker in its commits and comments), so people know when they're dealing with an agent.
 
 ## 4. Deployment diligence: can the user stand behind it?
@@ -63,9 +63,10 @@ This is the most important section. Put the questions to the **user**; don't ans
   - how it could fail.
 
   If they can't, offer a walkthrough before shipping. It's also a signal for next time: mark similar subtasks **Own** (for learning) in the delegation skill.
+- **Awaiting-user checks:** list every `[manual: user]` criterion and every ⚠️ awaiting-user item from the discernment review, with what to look at. The user must do each check and confirm it. A review by Claude doesn't count, even if discernment marked it ✅.
 - **Unverified items:** list every ⚠️ not-verified item from the discernment review. The user must accept each one explicitly, or have it verified first. Silence doesn't count as acceptance.
-- **Verification on the final version:** were tests, build, and lint run after the last change? Is the new behavior covered by tests?
-- **Blast radius:** what breaks if this is wrong, and who is affected (users, other teams, data)?
+- **Verification on the final version:** were tests, build, and lint run after the last change? Compare the current `git diff --stat` with the latest **verified state** from discernment. If it's identical, cite those results instead of re-running; if anything changed, re-run and keep only the summary lines. Is the new behavior covered by tests?
+- **Blast radius:** what breaks if this is wrong, and who is affected (users, other teams, data)? Name any input that existing callers may already send and that now gets a different result (e.g. a parameter that used to be ignored and is now rejected).
 - **Rollback:** how is it reverted (revert commit, feature flag, migration down-path)? For irreversible changes (data migrations, deletions, external messages), has the rollback or backup actually been tested? If not, that's at least ⚠️.
 - **Safe release:** for risky changes, suggest a feature flag, staged rollout, or canary.
 - **Monitoring:** how will you know it's broken in production (logs, metrics, alerts, error tracking)? Who watches it after release?
@@ -91,6 +92,6 @@ Reply with:
 End with a status, using this rule:
 - **Not ready:** discernment said Rework or wasn't run on a risky change, secrets were found, a supply chain problem is unresolved, the user can't explain the riskiest part, or an irreversible change has no tested rollback.
 - **Ready after the items above:** only ⚠️ items remain, each with a clear action.
-- **Ready to ship:** everything is ✅, and the user has accepted any unverified items.
+- **Ready to ship:** everything is ✅, the user has done every awaiting-user check, and has accepted any unverified items.
 
 The final call belongs to the user. Never commit, push, merge, or deploy from this skill.

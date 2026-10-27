@@ -1,0 +1,45 @@
+name: check
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Plugin manifest is valid
+        run: |
+          node -e '
+            const p = require("./.claude-plugin/plugin.json");
+            if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.name)) throw new Error("name must be kebab-case");
+            if (!/^\d+\.\d+\.\d+$/.test(p.version)) throw new Error("version must be semver");
+          '
+
+      - name: Skills are well-formed and within the token budget
+        run: |
+          fail=0
+          for f in skills/*/SKILL.md; do
+            dir=$(dirname "$f")
+            # Frontmatter name matches the folder
+            grep -qx "name: $(basename "$dir")" "$f" || { echo "::error file=$f::name must be $(basename "$dir")"; fail=1; }
+            # Token budget: ~6k tokens (24k characters) per skill
+            size=$(wc -c < "$f")
+            [ "$size" -le 24000 ] || { echo "::error file=$f::$size chars, over the 24000-char (~6k token) budget"; fail=1; }
+            # Referenced skill files exist, e.g. `guardrails.md` or `../description/SKILL.md`
+            for ref in $(grep -oE '`(\.\./[a-z-]+/)?([a-z-]+|SKILL)\.md`' "$f" | tr -d '`' | sort -u || true); do
+              [ -f "$dir/$ref" ] || { echo "::error file=$f::missing referenced file $ref"; fail=1; }
+            done
+          done
+          # Commands named in the docs exist
+          for cmd in $(grep -ohE '/4d:[a-z-]+' README.md examples/TESTING.md | sort -u); do
+            [ -d "skills/${cmd#/4d:}" ] || { echo "::error::docs mention $cmd, but skills/${cmd#/4d:} doesn't exist"; fail=1; }
+          done
+          exit $fail
+
+      - name: Example app baseline passes
+        working-directory: examples/tasks-api
+        run: npm test

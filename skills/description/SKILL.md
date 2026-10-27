@@ -1,5 +1,5 @@
 ---
-name: 2-description
+name: description
 description: Turn a rough coding request into a precise brief covering what to build (product), how to approach it (process), and how Claude should behave while working (performance). Use when the user has a vague task, before a large change, or when they ask for help writing a better prompt or spec.
 argument-hint: <rough request>
 ---
@@ -102,7 +102,7 @@ A numbered list of statements that are each either true or false about the finis
 **Each criterion must:**
 - Describe **observable behavior** (what a user, caller, or test sees), not implementation details.
 - Be **pass/fail**, with no vague words like "works", "fast", "clean", or "user-friendly". Replace them with numbers or concrete outcomes ("responds in under 200 ms for 10k rows").
-- Say **how it's checked**, tagged `[test]` (an automated test, new or existing), `[cmd]` (a command such as build, lint, or type check), or `[manual]` (a step a person performs, written out).
+- Say **how it's checked**, tagged `[test]` (an automated test, new or existing), `[cmd]` (a command such as build, lint, or type check), `[manual]` (a mechanical step anyone can perform, written out, e.g. `curl` the endpoint), or `[manual: user]` (needs human judgment: the wording of a public contract or docs other teams rely on, UX, copy). Claude can never mark a `[manual: user]` criterion met.
 
 Use *Given / When / Then* when it makes the condition clearer, e.g. "Given a user with role `viewer`, when they call `DELETE /posts/1`, then they get `403` and the post still exists `[test]`".
 
@@ -114,7 +114,7 @@ Use *Given / When / Then* when it makes the condition clearer, e.g. "Given a use
 - **Non-functional:** performance budgets, security (authorization, validation), accessibility, from the constraints above.
 - **No regressions:** existing tests still pass; named behavior that must stay unchanged (e.g. "`GET /users` without `role` returns all users, as before").
 
-Every item in the deliverable should be covered by at least one criterion. If something can't be made checkable, list it under assumptions instead of writing a vague criterion.
+**Coverage check before printing.** Every promise in the brief needs at least one criterion that would fail if it were broken: each deliverable item, each behavior stated under Product (including edge cases and error values), each listed example, and each ⚠️ assumption that decides behavior. Walk the brief and map each one to an AC number; add a criterion for anything unmapped. If something can't be made checkable, list it under assumptions instead of writing a vague criterion.
 
 ### Out of scope
 Task-specific limits. Guardrails are general rules that apply to every task; this section names the concrete things *this* task must leave alone. List two kinds:
@@ -138,58 +138,18 @@ Task-specific limits. Guardrails are general rules that apply to every task; thi
 The discernment skill checks the final diff against this list, so be concrete: name paths, routes, and behaviors rather than writing "don't break anything".
 
 ### Guardrails
-General rules for every task. Include these unless the user says otherwise. Also apply any rules in the repo's CLAUDE.md or CONTRIBUTING; when two rules conflict, the stricter one wins. Each rule says what to do instead, so Claude is never stuck.
-
-**Code integrity**
-- Don't edit, skip, or weaken tests to make them pass. → Fix the code. If the test itself looks wrong, stop and ask.
-- Don't game the checks: no disabling lint rules, lowering coverage thresholds, loosening types (`any`, `as unknown as`), or editing CI/config files just to get a pass. → Fix the cause, or report the failure honestly.
-- Don't silence errors (broad catches, `@ts-ignore`, `--no-verify`). → Handle the error properly, or leave it visible and report it.
-- Don't add dependencies without asking. → Ask, and run the supply chain check.
-- Stay within the deliverable. → Unrelated problems go to "follow-ups" in the final report (see Out of scope).
-
-**Safety**
-- No destructive commands: deleting data, dropping tables, `rm -rf`, `git reset --hard`, `git push --force`. → Stop and ask, explaining why it's needed.
-- No migrations or scripts against any database except a local or test one. → Prepare them and let the user run them.
-- No external side effects: calling production services, sending emails or messages, deploying, publishing packages. → Use mocks, local services, or dry-run flags; leave the real action to the user.
-- No git commits, pushes, or PRs unless the brief says so. → Leave the changes uncommitted and summarize them.
-- Don't read, print, hard-code, or log secrets (`.env`, credentials, tokens). → Reference them through config or environment variables by name only.
-
-**Honesty**
-- Don't claim something was verified unless the command was actually run. → Report exactly what ran, the result, and what wasn't checked.
-- Don't use an API, function, or flag without confirming it exists in this repo or the installed dependency version. → Check the source or docs first.
-- Report partial work and failures plainly. → Say what's done, what isn't, and why.
-
-**Extra rules for Agency mode** (Claude acting unattended):
-- Never grant itself new permissions, tokens, or access.
-- Cap the work per run (e.g. at most N files changed, N PRs opened, or N comments posted) and stop when the cap is reached.
-- Do a dry run first where possible, and only act for real when the dry run looks right.
-- Make sure there's a way to stop it: a kill switch, a feature flag, or disabling the schedule or workflow.
-
-**Enforce what matters most.** These guardrails are instructions, not technical limits. For rules that must never be broken, especially in Agency mode, suggest backing them with Claude Code permission deny rules or hooks in `.claude/settings.json` (e.g. denying `git push`, `rm -rf`, or reading `.env`), so the action is actually blocked.
+The standard guardrails live in `guardrails.md` next to this file: code integrity, safety, honesty, extra rules for Agency mode, and how to enforce the critical ones with deny rules. Read it only when you need the full list (see "Guardrails in the brief" in Output). Also apply any rules in the repo's CLAUDE.md or CONTRIBUTING; when two rules conflict, the stricter one wins.
 
 ### Supply chain check (only when third-party code is involved)
-Include this section when the task adds, updates, or runs anything from outside the repo. That includes packages (npm, pip, cargo, etc.), GitHub Actions, Docker base images, CDN scripts, install scripts (`curl … | sh`), MCP servers or plugins, and code snippets copied from the web. Leave it out otherwise.
-
-Before adding or updating any of these, the brief requires:
-- **Need:** first check whether the standard library or an existing dependency already covers it. Every new dependency adds risk.
-- **It's the real thing:** the exact name matches the official project (check the registry page and the source repo). AI assistants sometimes suggest package names that don't exist, and attackers register those names ("slopsquatting"); others register near-miss names ("typosquatting").
-- **Reputation:** an active, real source repository; a credible download count; no recent sudden change of owner or maintainer; no open security advisories.
-- **Release age:** avoid versions published in the last few days (e.g. less than 7 days old) unless it's an urgent security fix. Most compromised releases are caught and pulled within that window.
-- **Install-time code:** check for install or postinstall scripts and what they do. Prefer installing with scripts disabled when the tool allows it (e.g. `npm install --ignore-scripts`).
-- **Pinning:** pin exact versions and commit the lockfile. Pin GitHub Actions to a full commit SHA, not a tag, and Docker images to a digest.
-- **Least privilege:** give CI jobs, tokens, Actions, and MCP servers only the permissions they need.
-- **Scan:** run the ecosystem's audit tool if available (`npm audit`, `pip-audit`, `cargo audit`, `osv-scanner`) and report the results.
-- **License:** compatible with the project.
-
-Claude must report what it checked for each third-party item and what it couldn't check. If something looks suspicious, stop and ask the user.
+Include this section when the task adds, updates, or runs anything from outside the repo: packages, GitHub Actions, Docker base images, CDN scripts, install scripts, MCP servers or plugins, or code copied from the web. When it applies, read `supply-chain.md` next to this file and copy the checks that apply into the brief. Leave it out otherwise.
 
 ## 3. Output
 
 Print the brief as one Markdown block the user can copy, under these headings: **Goal**, **Product**, **Process**, **Performance**, **Acceptance criteria**, **Out of scope**, **Guardrails**, **Final report**, and **Supply chain check** when third-party code is involved. Include only the items that apply under each heading. Keep it tight.
 
 **Guardrails in the brief:**
-- **Default:** write "Standard guardrails apply", then list only the task-specific additions or any exceptions the user approved.
-- **Full list:** write out every guardrail when the brief is saved for a subagent or another session, or the mode is Agency. Those readers can't see this skill or this conversation.
+- **Default:** write exactly "Standard guardrails apply." and then only the task-specific additions or any exceptions the user approved. Never summarize or paraphrase the standard list: a partial list reads as the whole list.
+- **Full list:** when the brief is saved to a file, handed to a subagent or another session, or the mode is Agency, **read `guardrails.md` and copy its rules word for word** into the brief. Those readers can't see this skill or this conversation. Don't write the full list from memory.
 
 **Final report.** Every brief ends with this section, telling Claude exactly what to report when the work is done:
 1. **Acceptance criteria status:** each AC number with ✅ met / ❌ not met / ⚠️ not verified, and how it was checked (test name, command, or manual step).
@@ -202,11 +162,11 @@ Print the brief as one Markdown block the user can copy, under these headings: *
 
 The discernment skill uses this report as its starting point, and checks it against the actual code and command output.
 
-**Assumptions.** After the brief, list the assumptions you made in filling it out, numbered. Mark with ⚠️ the ones that would change what gets built if wrong, and list those first, so the user knows what to confirm.
+**Assumptions.** After the brief, list the assumptions you made in filling it out, numbered. Mark with ⚠️ the ones that would change what gets built if wrong, and list those first, so the user knows what to confirm. A default you chose where the source of truth is silent (tie order, empty or repeated values, error message text) is an assumption, even when it's written into Product or an AC. Each ⚠️ assumption names the AC that tests it.
 
 **Next step.** Offer: (a) execute the brief now, (b) save it to a file (e.g. `docs/briefs/<slug>.md`) for later or for a subagent, or (c) revise it. Don't execute without the user choosing.
 
-**A saved brief must stand on its own.** A subagent or later session won't see this conversation. Before saving, replace every "see above", "as discussed", or "the file we looked at" with the actual paths, links, decisions, and the full guardrails list.
+**A saved brief must stand on its own.** A subagent or later session won't see this conversation. Before saving, replace every "see above", "as discussed", or "the file we looked at" with the actual paths, links, decisions, and the full guardrails list copied from `guardrails.md`.
 
 ## Note on the loop
 

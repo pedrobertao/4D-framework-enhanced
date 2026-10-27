@@ -1,5 +1,5 @@
 ---
-name: 5-full-loop
+name: cycle
 description: Run a coding task through the full AI Fluency 4D cycle — Delegation, Description, Discernment, Diligence — with a checkpoint for the user between each phase. Use when the user wants to work through a task "the 4D way" or asks for a disciplined AI-assisted workflow end to end.
 argument-hint: <task>
 disable-model-invocation: true
@@ -7,15 +7,17 @@ disable-model-invocation: true
 
 # The 4D cycle
 
-Run **$ARGUMENTS** through the four competencies of AI Fluency, in order. Each phase follows its own skill's instructions. Read the sibling skill files (`../1-delegation/SKILL.md`, `../2-description/SKILL.md`, `../3-discernment/SKILL.md`, `../4-diligence/SKILL.md`) and apply them. **Stop for the user's confirmation at the end of every phase.** The checkpoints are the point of this workflow; don't skip them.
+Run **$ARGUMENTS** through the four competencies of AI Fluency, in order. Each phase follows its own skill's instructions, in the sibling files `../delegation/SKILL.md`, `../description/SKILL.md`, `../discernment/SKILL.md`, and `../diligence/SKILL.md`. Read each one when you reach its phase, not all at the start; a small task or an *Own* subtask may never need some of them. **Stop for the user's confirmation at the end of every phase.** The checkpoints are the point of this workflow; don't skip them.
 
 Start each message with a one-line status, e.g. `4D ▸ Discernment (subtask 2/3, round 1)`, so the user always knows where they are in the cycle.
+
+**Keep checkpoints lean.** Show what's new since the last checkpoint. Refer to the saved brief by its path instead of reprinting it, and don't repeat tables from earlier phases; point to them.
 
 ## 1. Delegation
 
 Run the delegation skill. Present the delegation table and wait for the user to confirm or adjust the split.
 
-**Small task?** If delegation classifies the whole task as small, run the short path instead of the full cycle. Still pause at each checkpoint, but keep each step brief:
+**Small task?** If delegation classifies the whole task as small, run the short path instead of the full cycle. Don't read the description skill, and read only the "Small task" sections of discernment and diligence. Still pause at each checkpoint, but keep each step brief:
 1. A 2–3 line brief (goal, one acceptance criterion, check command). Wait for approval.
 2. Implement it.
 3. Discernment's light check.
@@ -50,7 +52,9 @@ Always finish execution with the brief's **Final report**.
 When there was more than one subtask, a later subtask may have changed files an earlier review already accepted. Before diligence, run discernment once more on the **combined** change, focusing on:
 - files changed after their subtask was reviewed;
 - how the subtasks fit together (integration, duplicated code, conflicting patterns);
-- the full test suite, build, and lint on the final version.
+- the full test suite, build, and lint on the final version. If the `git diff --stat` matches the last review's **verified state**, cite those results instead of re-running.
+
+With a single subtask and no changes since its review, this step is one line saying so.
 
 ## 4. Diligence
 

@@ -1,9 +1,14 @@
 {
-  "name": "4d-framework-enhanced",
-  "description": "AI Fluency 4D framework (Delegation, Description, Discernment, Diligence) as Claude Code skills for coding.",
+  "name": "4d",
   "version": "1.0.0",
+  "description": "AI Fluency 4D framework for coding: Delegation (who does what), Description (a precise brief), Discernment (skeptical review), and Diligence (pre-ship gate), plus /4d:cycle to run all four with checkpoints.",
   "author": {
-    "name": "Pedro",
-    "email": "pedrobertao123@gmail.com"
-  }
+    "name": "Pedro Bertão",
+    "email": "pedrobertao123@gmail.com",
+    "url": "https://github.com/pedrobertao"
+  },
+  "homepage": "https://github.com/pedrobertao/4D-framework-enhanced#readme",
+  "repository": "https://github.com/pedrobertao/4D-framework-enhanced",
+  "license": "MIT",
+  "keywords": ["ai-fluency", "4d", "delegation", "code-review", "workflow", "skills"]
 }

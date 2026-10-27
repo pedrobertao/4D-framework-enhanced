@@ -42,4 +42,4 @@ Expected verdict: **Rework**.
 **Diligence** should say **Not ready**, because discernment said Rework and there's an unresolved dependency/supply chain problem.
 
 ## Scenario E
-No fixed answer. Check that the process behaves as the full-loop skill describes.
+No fixed answer. Check that the process behaves as the cycle skill describes.

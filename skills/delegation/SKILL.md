@@ -1,5 +1,5 @@
 ---
-name: 1-delegation
+name: delegation
 description: Plan who does what before coding starts — split a task into parts for Claude to automate, parts to work on together, and parts the developer should own. Use at the start of a feature, refactor, or bug hunt, or when the user asks "should I have Claude do this?" or "how should we split this up?".
 argument-hint: "[task or goal to plan]"
 ---

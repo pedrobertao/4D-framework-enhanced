@@ -1,5 +1,5 @@
 ---
-name: 3-discernment
+name: discernment
 description: Critically evaluate AI-written code — check that the output is correct, that the reasoning behind it holds up, and that the collaboration went well — before accepting it. Use after Claude finishes a change, when reviewing a diff produced with AI, or when the user asks "is this actually right?".
 argument-hint: "[files, diff range, or what to evaluate — defaults to current changes]"
 ---
@@ -18,11 +18,13 @@ If no target was given, evaluate the current changes: `git diff` and `git diff -
 - **The Final report:** the report Claude gave when it finished the work, if any.
 - **The delegation plan:** the subtask's mode (Automate / Augment / Agency) and whether it was classified as a small task.
 
-If there's **no brief**, use the original request as the reference. Say plainly that the checks are weaker without explicit acceptance criteria, and still run sections 2–5 using the standard guardrails.
+If there's **no brief**, use the original request as the reference. Say plainly that the checks are weaker without explicit acceptance criteria, and still run sections 2–5 using the standard guardrails (`../description/guardrails.md`).
 
 **Reviewing your own work.** Re-read the actual diff and command output now. Don't rely on your memory of what you intended. Try to prove the change wrong before concluding it's right.
 
 **Every finding needs evidence.** That means command output, a grep result, a `file:line`, or a concrete input that fails. If you suspect a problem but can't show it, list it as ⚠️ unverified, not as a finding. False alarms waste the user's time as much as missed bugs.
+
+**Match verification depth to risk.** Run each check command once and the full suite once. Keep only the summary lines of command output (counts and failures, e.g. piped through `tail`), not full logs. Go further only where it pays off: write probe scripts, or deliberately break the code to see whether a test fails, only for criteria that touch public contracts, data, security, or money, or whose test looks too weak to trust after reading it. Note each extra check in "Verified vs. unverified" so the user sees what it bought.
 
 ## 1. Small task? Use the light check
 
@@ -37,9 +39,10 @@ If the light check finds anything unexpected, switch to the full review.
 
 ### Acceptance criteria, one by one
 Check every AC by its number, using its tag:
-- **`[test]`:** confirm the test exists, run it, and confirm it **actually tests the criterion**. Ask: if the change were reverted, would this test fail? A test that only checks a mock was called, or that asserts nothing meaningful, does not verify the criterion.
+- **`[test]`:** confirm the test exists, run it, and confirm it **actually tests the criterion**. Ask: if the change were reverted, would this test fail? Answer by reading the test first; actually break the code only per the depth rule above. A test that only checks a mock was called, that asserts nothing meaningful, or whose inputs can't tell the right implementation from a plausible wrong one, does not verify the criterion.
 - **`[cmd]`:** run the command and record the result.
 - **`[manual]`:** do the step yourself if you can (e.g. `curl` the endpoint, run the script). If you can't, write the exact steps for the user and mark it ⚠️ not verified.
+- **`[manual: user]`:** never mark it ✅ yourself, even if you've read the result and it looks right. Mark it ⚠️ **awaiting user**, and say exactly what to look at (file, section, the question to answer). Treat any `[manual]` step that needs human judgment (public contract or docs wording, UX, copy) the same way.
 
 Also flag deliverable items from the brief that no criterion covers.
 
@@ -75,7 +78,7 @@ A claim that doesn't match reality is a finding even if the code is fine, becaus
 - **Secrets:** tokens, keys, passwords, or `.env` values in code, logs, or test fixtures.
 - **Safety:** destructive commands, non-local database runs, external side effects, or git commits/pushes that happened during the work.
 
-**Supply chain.** If any third-party item was added or updated (manifest, lockfile, GitHub Actions, Dockerfile, CDN script), confirm the description skill's supply chain check was done and reported. If it wasn't, run the key checks now: the name is the real package, release age, install scripts, pinned versions, audit tool results.
+**Supply chain.** If any third-party item was added or updated (manifest, lockfile, GitHub Actions, Dockerfile, CDN script), confirm the description skill's supply chain check was done and reported. If it wasn't, read `../description/supply-chain.md` and run the key checks now: the name is the real package, release age, install scripts, pinned versions, audit tool results.
 
 ## 5. Process discernment: did the reasoning hold up?
 
@@ -109,13 +112,13 @@ Also: was it honest about uncertainty and unverified parts?
 Reply with:
 
 1. **Verdict**, using this rule:
-   - **Accept:** no Blockers or Majors, and every AC is ✅.
+   - **Accept:** no Blockers or Majors, and every AC is ✅ (or ⚠️ awaiting user, which diligence carries forward).
    - **Accept with fixes:** no Blockers; Majors or Minors are local and quick to fix.
    - **Rework:** any Blocker, or the approach itself is wrong.
 2. **Acceptance criteria table:** AC number | ✅ / ❌ / ⚠️ | how it was checked | evidence.
 3. **Findings:** Blockers first, then Majors, then Minors. Each gets a `file:line`, what's wrong, the evidence, and its cause (brief or code).
 4. **Scope and guardrails:** ✅ clean, or the violations found.
-5. **Verified vs. unverified:** what you actually checked versus what is still taken on trust.
+5. **Verified vs. unverified:** what you actually checked versus what is still taken on trust, including every ⚠️ awaiting-user item. End it with a one-line **verified state**: the `git diff --stat` totals and the check results (e.g. `3 files, +130/−1 · npm test 18/18`). Later phases compare against it to skip re-running unchanged checks.
 6. **Feed back into Description:** for each brief problem, the specific change to the brief (a new AC, clearer wording, a new guardrail or constraint).
 
 **Rounds.** Count this review's round for the same brief. If this is the second Rework in a row, don't suggest a third round. Recommend going back to the delegation skill, because the subtask may need a different mode (Augment instead of Automate, or Own).
